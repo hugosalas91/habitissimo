@@ -324,12 +324,14 @@ def ordenate_bags(request):
         data = response_dictionary(0, _(u'Existen varias mochilas'), {})
         return Response(data, status=status.HTTP_400_BAD_REQUEST)
     
+    # we put all the items in the backpack
     all_items = ItemsBackpack.objects.all()
     all_items.update(backpack=backpack)
     
     categories = Category.objects.filter(active=True)
     
     for c in categories:
+        # We see what bags there are for each category
         bags_in_category = Bag.objects.filter(
             active=True,
             category=c
@@ -338,10 +340,15 @@ def ordenate_bags(request):
         if bags_in_category:
             number_of_bags = bags_in_category.count()
             max_number_of_items = number_of_bags * bags_in_category[0].max_number_of_items
+            
+            # we sort the items in that category in alphabetical order
             items_in_bags = ItemsBackpack.objects.filter(item__category=c)
             number_of_items_in_bags = items_in_bags.count()
+            
+            # we are left only with the items that fit in the backpacks that are in that category
             items_for_bags = items_in_bags.order_by("item__name")[:max_number_of_items]
                 
+            # We are putting the items in the bags of their category and changing the value of the order field so that they go in alphabetical order
             bag = 0
             cont_bag = 0
             for count, i in enumerate(items_for_bags):
@@ -354,11 +361,13 @@ def ordenate_bags(request):
                     bag += 1
                     cont_bag = 0
                     
+    # We see what items are left in the backpack and add 100 to their order value
     items_in_backpack = ItemsBackpack.objects.filter(backpack=backpack)
     for i in items_in_backpack:
         i.order = i.order + 100
         i.save()
     
+    # We leave the 8 items in the backpack and the rest we are putting in the holes in the backpacks
     if items_in_backpack:
         rest_of_items = items_in_backpack[backpack.max_number_of_items:]
         bags = Bag.objects.all().order_by('order')
