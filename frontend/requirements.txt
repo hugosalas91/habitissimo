@@ -1,0 +1,6 @@
+Django==3.1.1
+psycopg2-binary==2.8.5
+requests==2.24.0
+django-classy-tags==2.0.0 
+django-sekizai==2.0.0
+

@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% load static sekizai_tags %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <div class="container">
+        {% if search and search != "" %}
+            <div class="alert alert-success" role="alert">
+                Has elegido "{{ search }}".
+            </div>
+        {% endif %}
+        <div class="row">
+            <div class="col-xs-12">
+                <h1>Bienvenido a Habitissimo</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-7 col-xs-12">
+                <img src="{% static 'images/professionals.png' %}" alt="professionals" style="width:100%; margin-bottom:40px;"/>
+            </div>
+            <div class="col-md-5 col-xs-12">
+                <p id="find-professionals-text">Encuentra profesionales de confianza</p>
+                <form action="." method="post">
+                    {% csrf_token %}
+                    <input type="text" name="search" id="search" placeholder="Qué necesitas..." onfocus="suggest(this);" onkeyup="suggest(this);"{% if search and search != "" %} value="{{ search }}" style="background:#FAFAFA;"{% endif %}>
+                    <i class="fa fa-search" aria-hidden="true" id="icon-search"></i>
+                    <p id="search-button"><input type="submit" value="Buscar"></p>
+                    <p style="margin-top:80px; line-height:1.5;"><i>Nota: El autocompletado no aparecerá hasta que se escriba la tercera letra en el input.</i></p>
+                </form>
+            </div>
+        </div>
+        <hr/>
+        <div class="row">
+            <div class="col-xs-12">
+                <h2>Backpack Challenge</h2>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-xs-12 col-md-4">
+                <h4>Crear nueva bolsa</h4>
+                <form action="." method="post" id="create-bag">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <input type="text" name="bag-name" id="bag-name" placeholder="Nombre de la bolsa" class="form-control">
+                    </div>
+                    <select name="bag-category" id="bag-category" class="browser-default custom-select" style="margin-bottom:10px;">
+                        <option value="">----</option>
+                        {% for c in categories %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p><a class="button">Crear</a></p>
+                </form>
+            </div>
+            <div class="col-xs-12 col-md-4">
+                <h4>Meter nuevo item en bolsa</h4>
+                <form action="." method="post" id="insert-item">
+                    {% csrf_token %}
+                    <select name="item-name" id="item-name" class="browser-default custom-select" style="margin-bottom:10px;">
+                        <option value="">----</option>
+                        {% for i in items %}
+                            <option value="{{ i.id }}">{{ i.name }} ({{ i.category_name }})</option>
+                        {% endfor %}
+                    </select>
+                    <p><a class="button">Insertar</a></p>
+                </form>
+            </div>
+            <div class="col-xs-12 col-md-4">
+                <h4>Ordenar bolsas</h4>
+                <form action="." method="post" id="ordenate-bags">
+                    {% csrf_token %}
+                    <p><a class="button">Ordenar</a></p>
+                </form>
+                <h4>Limpiar todo</h4>
+                <form action="." method="post" id="clean-all">
+                    {% csrf_token %}
+                    <p><a class="button">Limpiar</a></p>
+                </form>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-xs-12">
+                <p>A continuación mostramos el contenido de las la mochila y las bolsas:</p>
+            </div>
+        </div>
+        
+        <div id="table-bags" class="table-responsive" style="margin-left:-20px;">
+            <table class="table table-striped">
+              <thead>
+              </thead>
+              <tbody>
+                {% if backpack %}
+                    <tr>
+                      <th scope="row">{{ backpack.name }}</th>
+                      {% for i in backpack.items %}
+                          <td>{{ i.name }}</td>
+                       {% endfor %}
+                    </tr>
+                {% endif %}
+                {% for b in bags %}
+                    <tr>
+                      <th scope="row">{{ b.name }}{% if b.category_name != "" %}<br/>({{ b.category_name }}){% endif %}</th>
+                      {% for i in b.items %}
+                          <td>{{ i.name }}</td>
+                       {% endfor %}
+                    </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% addtoblock "js" %}
+        <script type="text/javascript">
+            function suggest(current_object){
+                
+                $(current_object).autocomplete({
+                    minLength: 3,
+                    source: function(request, callback){
+                        console.log("Autocomplete");
+                        var url = '/autocomplete/?str=' + request.term;
+                        console.log(url);
+
+                        $.ajax({
+                            type: 'GET',
+                            url: url,
+                            success: function (data) {
+                                var response = [];
+                                var rs = jQuery.parseJSON(data);
+                                for (var k = 0; k < rs.length; k++) {
+                                    response.push({value: rs[k].id, label: rs[k].name});
+                                }
+                                callback(response)
+                            },
+                        });
+                    },
+                    select: function( event, ui ) {
+                        $('#search').attr("value_name", ui.item.label);
+                        $(current_object).val( ui.item.label );
+                        return false;
+                    },
+                    focus: function( event, ui ) {
+                        return false;
+                    }
+                });
+            }
+            
+            $(document).ready(function() {
+                $("#search").focusin(function() {
+                    $("#icon-search").css("color", "#FF7300");
+                });
+                
+                $("#search").focusout(function() {
+                    $("#icon-search").css("color", "#757575");
+                });
+                
+                $("#create-bag a").click(function() {
+                    var bag_name = $("#bag-name").val();
+                    var bag_category = $("#bag-category").val();
+                    
+                    if (bag_name != "") {
+                        $.ajax({
+                            type: 'GET',
+                            url: '{% url "create_bag" %}?name=' + bag_name+ '&category=' + bag_category,
+                            data: {},
+                            success: function (response) {
+                                var data = JSON.parse(response);
+                                $("#table-bags table").remove();
+                                $("#table-bags").append('<table class="table table-striped"><thead></thead><tbody></tbody></table>');
+                                
+                                var backpack = '<tr><th scope="row">' + data["backpack"]["name"] + '</th>';
+                                for (var i=0; i<data["backpack"]["items"].length; i++) {
+                                    backpack += '<td>' + data["backpack"]["items"][i]["name"] + '</td>';
+                                }
+                                backpack += '</tr>';
+                                $("#table-bags table tbody").append(backpack);
+                                
+                                var bags = "";
+                                for (var d=0; d<data["bags"].length; d++) {
+                                    var bag = '<tr><th scope="row">' + data["bags"][d]["name"] + '</th>';
+                                    for (var i=0; i<data["bags"][d]["items"].length; i++) {
+                                        bag += '<td>' + data["bags"][d]["items"][i]["name"] + '</td>';
+                                    }
+                                    bag += '</tr>';
+                                    bags += bag;
+                                }
+                                $("#table-bags table tbody").append(bags);  
+                            },
+                        });
+                    }
+                });
+                
+                $("#insert-item a").click(function() {
+                    var item_name = $("#item-name").val();
+                    
+                    if (item_name != "") {
+                        $.ajax({
+                            type: 'GET',
+                            url: '{% url "insert_item" %}?item_id=' + item_name,
+                            data: {},
+                            success: function (response) {
+                                var data = JSON.parse(response);
+                                $("#table-bags table").remove();
+                                $("#table-bags").append('<table class="table table-striped"><thead></thead><tbody></tbody></table>');
+                                
+                                var backpack = '<tr><th scope="row">' + data["backpack"]["name"] + '</th>';
+                                for (var i=0; i<data["backpack"]["items"].length; i++) {
+                                    backpack += '<td>' + data["backpack"]["items"][i]["name"] + '</td>';
+                                }
+                                backpack += '</tr>';
+                                $("#table-bags table tbody").append(backpack);
+                                
+                                var bags = "";
+                                for (var d=0; d<data["bags"].length; d++) {
+                                    var bag = '<tr><th scope="row">' + data["bags"][d]["name"] + '</th>';
+                                    for (var i=0; i<data["bags"][d]["items"].length; i++) {
+                                        bag += '<td>' + data["bags"][d]["items"][i]["name"] + '</td>';
+                                    }
+                                    bag += '</tr>';
+                                    bags += bag;
+                                }
+                                $("#table-bags table tbody").append(bags);  
+                            },
+                        });
+                    }
+                });
+                
+                $("#clean-all a").click(function() {
+                    $.ajax({
+                        type: 'GET',
+                        url: '{% url "clean_all" %}',
+                        data: {},
+                        success: function (response) {
+                            $("#table-bags table").remove(); 
+                            $("#table-bags").append('<table class="table table-striped"><thead></thead><tbody><tr><th scope="row">Backpack</th></tr></tbody></table>');
+                        },
+                    });
+                });
+                
+                $("#ordenate-bags a").click(function() {
+                    $.ajax({
+                        type: 'GET',
+                        url: '{% url "ordenate_bags" %}',
+                        data: {},
+                        success: function (response) {
+                            var data = JSON.parse(response);
+                            $("#table-bags table").remove();
+                            $("#table-bags").append('<table class="table table-striped"><thead></thead><tbody></tbody></table>');
+
+                            var backpack = '<tr><th scope="row">' + data["backpack"]["name"] + '</th>';
+                            for (var i=0; i<data["backpack"]["items"].length; i++) {
+                                backpack += '<td>' + data["backpack"]["items"][i]["name"] + '</td>';
+                            }
+                            backpack += '</tr>';
+                            $("#table-bags table tbody").append(backpack);
+
+                            var bags = "";
+                            for (var d=0; d<data["bags"].length; d++) {
+                                var bag = '<tr><th scope="row">' + data["bags"][d]["name"] + '</th>';
+                                for (var i=0; i<data["bags"][d]["items"].length; i++) {
+                                    bag += '<td>' + data["bags"][d]["items"][i]["name"] + '</td>';
+                                }
+                                bag += '</tr>';
+                                bags += bag;
+                            }
+                            $("#table-bags table tbody").append(bags);  
+                        },
+                    });
+                });
+                
+            });
+        </script>
+    {% endaddtoblock %}
+{% endblock %}
