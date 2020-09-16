@@ -21,14 +21,19 @@ $ docker-compose up -d --build
 
 <img src="./initial_error.png">
 
-Para acceder a la web vamos a la URL **http://0.0.0.0:8001/**.
+5. Para acceder a la web vamos a la URL **http://0.0.0.0:8001/**.
 
 Así debería verse la Home:
 
 <img src="./home.png">
 
-En el cuadro de búsqueda podremos buscar cosas relacionadas con pintores o fontaneros, para que aparezcan las búsquedas sugeridas lo tengo configurado a mínimo 3 letras escritas en el cuadro.
+6. En el cuadro de búsqueda podremos buscar cosas relacionadas con pintores o fontaneros, para que aparezcan las búsquedas sugeridas lo tengo configurado a mínimo 3 letras escritas en el cuadro.
 
-Abajo está el desafío de la mochila y podeis jugar con los formularios. El código principal de este desafío está en la carpeta **backend/api_rest_app/api**.
+7. Abajo está el desafío de la mochila y podeis jugar con los formularios. El código principal de este desafío está en la carpeta **backend/api_rest_app/api**.
 
-Si quereis también podeis entrar en el panel de administración de la aplicación en la URL **http://0.0.0.0:8000/** con el usuario **habitissimo** y la contraseña **testpass123**.
+8. Si quereis también podeis entrar en el panel de administración de la aplicación en la URL **http://0.0.0.0:8000/** con el usuario **habitissimo** y la contraseña **testpass123**.
+
+9. Para ejecutar los test en la aplicación escribir el siguiente comando:
+```
+docker-compose exec web_front python manage.py test front_app
+```

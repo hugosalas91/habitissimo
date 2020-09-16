@@ -39,6 +39,23 @@ services:
             - POSTGRES_PASSWORD=testuser123
         networks:
             - net-habitissimo
+    chrome:
+        image: selenium/node-chrome:3.14.0-gallium
+        volumes:
+            - /dev/shm:/dev/shm
+        depends_on:
+            - hub
+        environment:
+            HUB_HOST: hub
+            HUB_PORT: 4444
+        networks:
+            - net-habitissimo
+    hub:
+        image: selenium/hub:3.14.0-gallium
+        ports:
+            - "4444:4444"
+        networks:
+            - net-habitissimo
 
 networks:
     net-habitissimo:

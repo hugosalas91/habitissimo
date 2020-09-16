@@ -361,10 +361,11 @@ def ordenate_bags(request):
                     bag += 1
                     cont_bag = 0
                     
-    # We see what items are left in the backpack and add 100 to their order value
+    # We see what items are left in the backpack and we order them
     items_in_backpack = ItemsBackpack.objects.filter(backpack=backpack)
-    for i in items_in_backpack:
-        i.order = i.order + 100
+    items_in_backpack = items_in_backpack.order_by("item__name")
+    for cont, i in enumerate(items_in_backpack):
+        i.order = cont + 1
         i.save()
     
     # We leave the 8 items in the backpack and the rest we are putting in the holes in the backpacks
@@ -382,7 +383,13 @@ def ordenate_bags(request):
                     break
             if len(rest_of_items) > free_spaces:
                 rest_of_items = rest_of_items[free_spaces:]
-    
+            
+            items_in_bag_ordered = ItemsBackpack.objects.filter(backpack=b)
+            items_in_bag_ordered = items_in_bag_ordered.order_by("item__name")
+            for cont, i in enumerate(items_in_bag_ordered):
+                i.order = cont + 1
+                i.save()
+            
     bags = Bag.objects.filter( 
         active=True
     ).order_by("order")
