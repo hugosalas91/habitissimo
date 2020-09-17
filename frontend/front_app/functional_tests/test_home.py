@@ -41,8 +41,6 @@ class HomepageTests(FunctionalTest):
     def test_can_search_a_service(self):
         # Hugo wants to visit Habitissimo Challenge webpage
         self.browser.get(self.live_server_url)
-        
-        sleep(30)
 
         # He notices the page title mention home
         self.assertIn('Home', self.browser.title)
