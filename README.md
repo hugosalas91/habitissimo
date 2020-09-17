@@ -35,5 +35,5 @@ Así debería verse la Home:
 
 9. Para ejecutar los test en la aplicación escribir el siguiente comando:
 ```
-docker-compose exec web_front python manage.py test front_app
+docker-compose exec web_front python manage.py test
 ```
